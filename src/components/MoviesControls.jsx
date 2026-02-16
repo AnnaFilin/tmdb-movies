@@ -41,6 +41,7 @@ export default function MoviesControls({ state, refs, handlers }) {
           type="button"
           ref={popularRef}
           onFocus={() => {
+            lastControlRef.current = "popular";
             clearFocusTimer();
             focusTimerRef.current = setTimeout(() => {
               triggerCategoryLoad("popular");
@@ -60,6 +61,7 @@ export default function MoviesControls({ state, refs, handlers }) {
           type="button"
           ref={nowPlayingRef}
           onFocus={() => {
+            lastControlRef.current = "now_playing";
             clearFocusTimer();
             focusTimerRef.current = setTimeout(() => {
               triggerCategoryLoad("now_playing");
@@ -79,6 +81,7 @@ export default function MoviesControls({ state, refs, handlers }) {
           type="button"
           ref={favoritesRef}
           onFocus={() => {
+            lastControlRef.current = "favorites";
             clearFocusTimer();
             focusTimerRef.current = setTimeout(() => {
               dispatch(moviesActions.setActiveList("favorites"));

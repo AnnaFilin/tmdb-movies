@@ -20,6 +20,9 @@ export function useHomeKeyboardNav({
   const focusTimerRef = useRef(null);
   const gridColsRef = useRef(4);
   const lastControlRef = useRef("popular");
+  const isGridModeRef = useRef(false);
+
+  const onKeyDownRef = useRef(null);
 
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -35,13 +38,38 @@ export function useHomeKeyboardNav({
 
   const focusControl = (key) => {
     lastControlRef.current = key;
+    isGridModeRef.current = false;
 
-    if (key === "popular") popularRef.current?.focus();
-    if (key === "now_playing") nowPlayingRef.current?.focus();
-    if (key === "favorites") favoritesRef.current?.focus();
-    if (key === "search") searchRef.current?.focus();
-    if (key === "prev") prevPageRef.current?.focus();
-    if (key === "next") nextPageRef.current?.focus();
+    const getEl = (k) => {
+      if (k === "popular") return popularRef.current;
+      if (k === "now_playing") return nowPlayingRef.current;
+      if (k === "favorites") return favoritesRef.current;
+      if (k === "prev") return prevPageRef.current;
+      if (k === "next") return nextPageRef.current;
+      if (k === "search") return searchRef.current;
+      return null;
+    };
+
+    const tryFocus = (k) => {
+      const el = getEl(k);
+      if (!el) return false;
+      if (el.disabled) return false;
+      el.focus();
+      return document.activeElement === el;
+    };
+
+    if (tryFocus(key)) return;
+
+    const last = lastControlRef.current;
+    if (last && last !== key && tryFocus(last)) return;
+
+    if (tryFocus("search")) {
+      lastControlRef.current = "search";
+      return;
+    }
+
+    tryFocus("popular");
+    lastControlRef.current = "popular";
   };
 
   const controlsOrder = [
@@ -53,13 +81,36 @@ export function useHomeKeyboardNav({
     "search",
   ];
 
+  const getControlEl = (k) => {
+    if (k === "popular") return popularRef.current;
+    if (k === "now_playing") return nowPlayingRef.current;
+    if (k === "favorites") return favoritesRef.current;
+    if (k === "prev") return prevPageRef.current;
+    if (k === "next") return nextPageRef.current;
+    if (k === "search") return searchRef.current;
+    return null;
+  };
+
   const moveControlFocus = (dir) => {
     const current = lastControlRef.current;
     const idx = controlsOrder.indexOf(current);
     if (idx === -1) return;
 
-    const nextIdx = Math.max(0, Math.min(controlsOrder.length - 1, idx + dir));
-    focusControl(controlsOrder[nextIdx]);
+    let nextIdx = idx;
+
+    for (let i = 0; i < controlsOrder.length; i += 1) {
+      nextIdx = Math.max(0, Math.min(controlsOrder.length - 1, nextIdx + dir));
+
+      const key = controlsOrder[nextIdx];
+      const el = getControlEl(key);
+
+      if (el && !el.disabled) {
+        focusControl(key);
+        return;
+      }
+
+      if (nextIdx === 0 || nextIdx === controlsOrder.length - 1) return;
+    }
   };
 
   const clampIndex = (next) => {
@@ -97,16 +148,52 @@ export function useHomeKeyboardNav({
   }, []);
 
   useEffect(() => {
+    if (!isGridModeRef.current) return;
+
     const el = gridRef.current?.querySelector(`[data-idx="${activeIndex}"]`);
     if (!el) return;
+
     el.focus();
     el.scrollIntoView({ block: "nearest", inline: "nearest" });
   }, [activeIndex, gridRef]);
 
+  useEffect(() => {
+    setActiveIndex(0);
+
+    requestAnimationFrame(() => {
+      const el = document.activeElement;
+
+      const isFocusable =
+        el === popularRef.current ||
+        el === nowPlayingRef.current ||
+        el === favoritesRef.current ||
+        el === prevPageRef.current ||
+        el === nextPageRef.current ||
+        el === searchRef.current ||
+        el?.hasAttribute?.("data-idx");
+
+      if (!isFocusable) {
+        focusControl(lastControlRef.current || "search");
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeList, popular.page, nowPlaying.page, itemsForGrid.length]);
+
   const onKeyDown = (e) => {
     const cols = gridColsRef.current || 4;
+    const activeEl = document.activeElement;
 
-    const active = document.activeElement;
+    if (
+      !activeEl ||
+      activeEl === document.body ||
+      activeEl === document.documentElement
+    ) {
+      e.preventDefault();
+      focusControl(lastControlRef.current || "search");
+      return;
+    }
+
+    const active = activeEl;
     const isInControls =
       active === popularRef.current ||
       active === nowPlayingRef.current ||
@@ -117,6 +204,8 @@ export function useHomeKeyboardNav({
 
     if (isInControls && e.key === "ArrowDown") {
       e.preventDefault();
+
+      isGridModeRef.current = true;
 
       const first = gridRef.current?.querySelector(`[data-idx="0"]`);
       setActiveIndex(clampIndex(0));
@@ -199,26 +288,30 @@ export function useHomeKeyboardNav({
 
     if (e.key === "ArrowRight") {
       e.preventDefault();
+      isGridModeRef.current = true;
       setActiveIndex((prev) => clampIndex(prev + 1));
       return;
     }
     if (e.key === "ArrowLeft") {
       e.preventDefault();
+      isGridModeRef.current = true;
       setActiveIndex((prev) => clampIndex(prev - 1));
       return;
     }
     if (e.key === "ArrowDown") {
       e.preventDefault();
+      isGridModeRef.current = true;
       setActiveIndex((prev) => clampIndex(prev + cols));
       return;
     }
     if (e.key === "ArrowUp") {
       e.preventDefault();
+      isGridModeRef.current = true;
 
       const colsNow = gridColsRef.current || 4;
 
       if (activeIndex < colsNow) {
-        focusControl("search");
+        focusControl(lastControlRef.current || "search");
         return;
       }
 
@@ -234,10 +327,33 @@ export function useHomeKeyboardNav({
 
     if (e.key === "Escape") {
       e.preventDefault();
-      focusControl(lastControlRef.current);
+      focusControl(lastControlRef.current || "search");
       return;
     }
   };
+
+  useEffect(() => {
+    onKeyDownRef.current = onKeyDown;
+  });
+
+  useEffect(() => {
+    const handler = (e) => {
+      const isNavKey =
+        e.key === "ArrowUp" ||
+        e.key === "ArrowDown" ||
+        e.key === "ArrowLeft" ||
+        e.key === "ArrowRight" ||
+        e.key === "Enter" ||
+        e.key === "Escape";
+
+      if (!isNavKey) return;
+
+      onKeyDownRef.current?.(e);
+    };
+
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   return {
     activeIndex,

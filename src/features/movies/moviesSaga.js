@@ -241,7 +241,7 @@ export default function* moviesSaga() {
   yield takeEvery("movies/initApp", initFavoritesWorker);
   yield takeEvery(moviesActions.toggleFavorite.type, persistFavoritesWorker);
   yield takeLatest(moviesActions.requestPopular.type, requestPopularWorker);
-  yield takeLatest(
+  yield takeEvery(
     moviesActions.requestMovieDetails.type,
     requestMovieDetailsWorker,
   );

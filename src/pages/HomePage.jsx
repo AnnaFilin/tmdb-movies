@@ -77,7 +77,6 @@ export default function HomePage() {
   });
 
   const activeIndex = nav.activeIndex;
-  const onKeyDown = nav.onKeyDown;
 
   const clearFocusTimer = nav.clearFocusTimer;
   const focusTimerRef = nav.focusTimerRef;
@@ -85,7 +84,6 @@ export default function HomePage() {
 
   return (
     <div
-      onKeyDown={onKeyDown}
       onClick={(e) => {
         const btn = e.target.closest?.("[data-idx]");
         if (!btn) return;
