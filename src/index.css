@@ -1,0 +1,293 @@
+:root {
+  color-scheme: dark;
+  --bg: #0b0d10;
+  --panel: #11151a;
+  --text: #e9eef5;
+  --muted: #a7b3c2;
+  --border: rgba(255, 255, 255, 0.08);
+  --focus: rgba(255, 255, 255, 0.22);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family:
+    system-ui,
+    -apple-system,
+    Segoe UI,
+    Roboto,
+    Arial,
+    sans-serif;
+}
+
+/* ===== Layout ===== */
+
+.appRoot {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.appHeader {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--border);
+  background: var(--panel);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.appTitle {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.appControls {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.controlsBar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+  width: 100%;
+}
+
+.controlsLeft,
+.controlsCenter,
+.controlsRight {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.chip {
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid #333;
+  background: #111;
+  color: #eee;
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.15s ease;
+  font-size: 14px;
+}
+
+.chip:hover {
+  background: #1c1c1c;
+}
+
+.chip:active {
+  transform: scale(0.97);
+}
+
+.chipActive {
+  background: white;
+  color: black;
+  font-weight: 600;
+}
+
+.chip:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.pageInfo {
+  font-size: 13px;
+  opacity: 0.7;
+  white-space: nowrap;
+}
+
+.searchInput {
+  padding: 8px 12px;
+  border-radius: 10px;
+  border: 1px solid #333;
+  background: #111;
+  color: #eee;
+  min-width: 240px;
+  outline: none;
+}
+
+.searchInput:focus {
+  border-color: var(--focus);
+}
+
+.appMain {
+  flex: 1;
+  min-height: 0;
+  padding-top: 24px;
+}
+
+.scrollArea {
+  height: 100%;
+  overflow: auto;
+  padding: 24px 32px 40px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(180px, 1fr));
+  gap: 18px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.card {
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: 14px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.card:focus {
+  outline: none;
+  border-color: var(--focus);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.08);
+}
+
+.card img {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  object-fit: cover;
+  border-radius: 10px;
+  display: block;
+}
+
+.cardTitle {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.cardMeta {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.detailsWrapper {
+  display: flex;
+  justify-content: center;
+  padding: 48px 20px;
+}
+
+.detailsCard {
+  max-width: 900px;
+  width: 100%;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 28px;
+  display: flex;
+  gap: 32px;
+  align-items: flex-start;
+}
+
+.detailsPoster {
+  width: 260px;
+  border-radius: 14px;
+  flex-shrink: 0;
+}
+
+.detailsContent {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.detailsTitle {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.detailsOverview {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+.detailsBtn {
+  align-self: flex-start;
+  padding: 6px 14px;
+  font-size: 13px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  cursor: pointer;
+  transition:
+    background 0.2s ease,
+    transform 0.15s ease;
+}
+
+.detailsBtn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.detailsBtn:active {
+  transform: scale(0.97);
+}
+
+.detailsBtnActive {
+  background: white;
+  color: black;
+  font-weight: 600;
+}
+
+@media (max-width: 1200px) {
+  .grid {
+    grid-template-columns: repeat(3, minmax(180px, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(160px, 1fr));
+  }
+}
+
+@media (max-width: 600px) {
+  .grid {
+    grid-template-columns: repeat(1, minmax(160px, 1fr));
+  }
+
+  .controlsBar {
+    gap: 16px;
+  }
+
+  .searchInput {
+    min-width: 100%;
+  }
+
+  .detailsCard {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .detailsPoster {
+    width: 200px;
+  }
+
+  .detailsContent {
+    align-items: center;
+  }
+}
