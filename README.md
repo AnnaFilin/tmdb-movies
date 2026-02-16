@@ -20,9 +20,15 @@ React + Redux + Redux-Saga application for browsing movies from TMDB.
 2. Install dependencies:
    npm install
 
-3. Create a `.env` file in the project root and add your TMDB API key:
-   VITE_TMDB_API_KEY=your_api_key_here
+3. Create a `.env` file in the project root and add the following variables:
+   VITE_TMDB_BASE_URL=https://api.themoviedb.org/3  
+   VITE_TMDB_READ_TOKEN=your_tmdb_read_access_token_here  
+   VITE_TMDB_TIMEOUT_MS=8000 
 
+⚠️ Important:
+- You must use the **TMDB API Read Access Token**, not the API key.
+- You can generate it at: https://developer.themoviedb.org/
+  
 4. Start the development server:
    npm run dev
 
