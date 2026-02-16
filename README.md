@@ -35,5 +35,4 @@ React + Redux + Redux-Saga application for browsing movies from TMDB.
 ## Notes
 
 - The app uses TMDB API.
-- You must create your own API key at https://developer.themoviedb.org/
 - Environment variables are not committed to the repository.
