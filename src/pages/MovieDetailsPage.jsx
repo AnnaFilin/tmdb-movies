@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams, useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { moviesActions } from "../features/movies/moviesSlice";
 import Layout from "../components/Layout";
@@ -7,6 +7,7 @@ import Layout from "../components/Layout";
 export default function MovieDetailsPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const dispatch = useDispatch();
 
   const detailsEntry = useSelector((state) => state.movies.detailsById?.[id]);
@@ -24,32 +25,36 @@ export default function MovieDetailsPage() {
   };
 
   useEffect(() => {
+    if (!id) return;
+    dispatch(moviesActions.requestMovieDetails(id));
+  }, [dispatch, id]);
+
+  useEffect(() => {
     if (status === "succeeded") {
       favBtnRef.current?.focus();
     }
   }, [status]);
 
   useEffect(() => {
-    if (!id) return;
-    dispatch(moviesActions.requestMovieDetails(id));
-  }, [dispatch, id]);
-
-  useEffect(() => {
     const onKeyDown = (e) => {
-      if (e.key === "Escape" || e.code === "Escape" || e.key === "Esc") {
-        e.preventDefault();
+      if (e.key !== "Escape") return;
 
-        if (window.history.length <= 1) {
-          navigate("/", { replace: true });
-        } else {
-          navigate(-1);
-        }
-      }
+      e.preventDefault();
+      e.stopPropagation();
+      e.stopImmediatePropagation?.();
+
+      // IMPORTANT: pass "from" to Home, because back won't carry it.
+      const from = location.state?.from || null;
+
+      navigate("/", {
+        replace: true,
+        state: from ? { from } : null,
+      });
     };
 
-    window.addEventListener("keydown", onKeyDown, true);
-    return () => window.removeEventListener("keydown", onKeyDown, true);
-  }, [navigate]);
+    document.addEventListener("keydown", onKeyDown, true);
+    return () => document.removeEventListener("keydown", onKeyDown, true);
+  }, [navigate, location.state]);
 
   if (status === "loading" || status === "idle") {
     return (

@@ -13,6 +13,7 @@ export default function MoviesControls({ state, refs, handlers }) {
   const {
     clearFocusTimer,
     focusTimerRef,
+    focusSeqRef,
     triggerCategoryLoad,
     dispatch,
     moviesActions,
@@ -42,13 +43,20 @@ export default function MoviesControls({ state, refs, handlers }) {
           ref={popularRef}
           onFocus={() => {
             lastControlRef.current = "popular";
+            // If already active, do nothing (avoid unnecessary scheduled load)
+            if (activeList === "popular") return;
+
+            const seq = ++focusSeqRef.current;
+
             clearFocusTimer();
             focusTimerRef.current = setTimeout(() => {
+              if (focusSeqRef.current !== seq) return;
               triggerCategoryLoad("popular");
             }, 2000);
           }}
           onBlur={clearFocusTimer}
           onClick={() => {
+            focusSeqRef.current += 1;
             clearFocusTimer();
             triggerCategoryLoad("popular");
           }}
@@ -62,13 +70,18 @@ export default function MoviesControls({ state, refs, handlers }) {
           ref={nowPlayingRef}
           onFocus={() => {
             lastControlRef.current = "now_playing";
+            if (activeList === "now_playing") return;
+            const seq = ++focusSeqRef.current;
+
             clearFocusTimer();
             focusTimerRef.current = setTimeout(() => {
+              if (focusSeqRef.current !== seq) return;
               triggerCategoryLoad("now_playing");
             }, 2000);
           }}
           onBlur={clearFocusTimer}
           onClick={() => {
+            focusSeqRef.current += 1;
             clearFocusTimer();
             triggerCategoryLoad("now_playing");
           }}
@@ -82,13 +95,18 @@ export default function MoviesControls({ state, refs, handlers }) {
           ref={favoritesRef}
           onFocus={() => {
             lastControlRef.current = "favorites";
+            if (activeList === "favorites") return;
+            const seq = ++focusSeqRef.current;
+
             clearFocusTimer();
             focusTimerRef.current = setTimeout(() => {
+              if (focusSeqRef.current !== seq) return;
               dispatch(moviesActions.setActiveList("favorites"));
             }, 2000);
           }}
           onBlur={clearFocusTimer}
           onClick={() => {
+            focusSeqRef.current += 1;
             clearFocusTimer();
             dispatch(moviesActions.setActiveList("favorites"));
           }}

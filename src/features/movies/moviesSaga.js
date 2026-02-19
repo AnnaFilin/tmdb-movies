@@ -47,6 +47,12 @@ function* persistFavoritesWorker() {
 function* requestPopularWorker(action) {
   const page = action.payload?.page ?? 1;
 
+  const existing = yield select((s) => s.movies.popular);
+
+  if (existing?.status === "succeeded" && (existing?.page ?? 1) === page) {
+    return; // already have this page, skip network call
+  }
+
   const controller = new AbortController();
 
   try {
@@ -121,6 +127,12 @@ function* requestMovieDetailsWorker(action) {
 
 function* requestNowPlayingWorker(action) {
   const page = action.payload?.page ?? 1;
+
+  const existing = yield select((s) => s.movies.nowPlaying);
+
+  if (existing?.status === "succeeded" && (existing?.page ?? 1) === page) {
+    return; // already have this page, skip network call
+  }
 
   const controller = new AbortController();
 

@@ -6,7 +6,6 @@ export function useHomeKeyboardNav({
   popular,
   nowPlaying,
   dispatch,
-  navigate,
   moviesActions,
   triggerCategoryLoad,
   searchRef,
@@ -16,13 +15,19 @@ export function useHomeKeyboardNav({
   prevPageRef,
   nextPageRef,
   gridRef,
+  skipAutoFocus = false,
+
+  // IMPORTANT: caller-provided open function (must include location.state.from)
+  onOpenMovieByIndex,
 }) {
   const focusTimerRef = useRef(null);
+  const focusSeqRef = useRef(0);
   const gridColsRef = useRef(4);
   const lastControlRef = useRef("popular");
   const isGridModeRef = useRef(false);
 
   const onKeyDownRef = useRef(null);
+  const skipAutoFocusRef = useRef(skipAutoFocus);
 
   const [activeIndex, setActiveIndex] = useState(0);
 
@@ -32,7 +37,15 @@ export function useHomeKeyboardNav({
 
     const style = window.getComputedStyle(gridEl);
     const template = style.gridTemplateColumns || "";
-    const cols = template.split(" ").filter(Boolean).length;
+
+    const repeatMatch = template.match(/repeat\((\d+),/);
+    if (repeatMatch) {
+      const n = Number(repeatMatch[1]);
+      if (Number.isFinite(n) && n >= 1) gridColsRef.current = n;
+      return;
+    }
+
+    const cols = template.trim().split(/\s+/).filter(Boolean).length;
     if (cols >= 1) gridColsRef.current = cols;
   };
 
@@ -127,12 +140,17 @@ export function useHomeKeyboardNav({
   };
 
   const openMovieByIndex = (idx) => {
-    const movie = itemsForGrid[idx];
-    if (!movie?.id) return;
-    navigate(`/movie/${movie.id}`);
+    if (typeof onOpenMovieByIndex === "function") {
+      onOpenMovieByIndex(idx);
+      return;
+    }
+
+    // Fallback (should not be used in your app):
+    // If caller forgot to pass callback, do nothing.
   };
 
   useEffect(() => {
+    if (skipAutoFocusRef.current) return;
     focusControl("popular");
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -158,7 +176,12 @@ export function useHomeKeyboardNav({
   }, [activeIndex, gridRef]);
 
   useEffect(() => {
-    setActiveIndex(0);
+    setActiveIndex((prev) => clampIndex(prev));
+
+    if (skipAutoFocusRef.current) {
+      skipAutoFocusRef.current = false;
+      return;
+    }
 
     requestAnimationFrame(() => {
       const el = document.activeElement;
@@ -183,6 +206,8 @@ export function useHomeKeyboardNav({
     const cols = gridColsRef.current || 4;
     const activeEl = document.activeElement;
 
+    const isGridItem = !!activeEl?.hasAttribute?.("data-idx");
+
     if (
       !activeEl ||
       activeEl === document.body ||
@@ -201,6 +226,19 @@ export function useHomeKeyboardNav({
       active === prevPageRef.current ||
       active === nextPageRef.current ||
       active === searchRef.current;
+
+    // ESC: from grid -> back to controls
+    if (e.key === "Escape") {
+      e.preventDefault();
+
+      if (isGridItem || isGridModeRef.current) {
+        isGridModeRef.current = false;
+        focusControl(lastControlRef.current || "search");
+        return;
+      }
+
+      return;
+    }
 
     if (isInControls && e.key === "ArrowDown") {
       e.preventDefault();
@@ -275,17 +313,12 @@ export function useHomeKeyboardNav({
       if (key === "favorites")
         dispatch(moviesActions.setActiveList("favorites"));
       if (key === "search") {
-        // nothing
+        // no-op
       }
       return;
     }
 
-    if (isInControls && e.key === "Escape") {
-      e.preventDefault();
-      focusControl("popular");
-      return;
-    }
-
+    // GRID navigation
     if (e.key === "ArrowRight") {
       e.preventDefault();
       isGridModeRef.current = true;
@@ -311,6 +344,7 @@ export function useHomeKeyboardNav({
       const colsNow = gridColsRef.current || 4;
 
       if (activeIndex < colsNow) {
+        isGridModeRef.current = false;
         focusControl(lastControlRef.current || "search");
         return;
       }
@@ -322,12 +356,6 @@ export function useHomeKeyboardNav({
     if (e.key === "Enter") {
       e.preventDefault();
       openMovieByIndex(activeIndex);
-      return;
-    }
-
-    if (e.key === "Escape") {
-      e.preventDefault();
-      focusControl(lastControlRef.current || "search");
       return;
     }
   };
@@ -361,6 +389,7 @@ export function useHomeKeyboardNav({
     onKeyDown,
     clearFocusTimer,
     focusTimerRef,
+    focusSeqRef,
     lastControlRef,
   };
 }
